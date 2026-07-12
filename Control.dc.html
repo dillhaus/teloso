@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Azeret+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script>window.WORKOUT_ROLE = 'control';</script>
+<script src="store.js"></script>
+<style>
+  @keyframes wkoPulse { 0%,100%{opacity:1} 50%{opacity:.2} }
+  @keyframes wkoBlink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.05)} }
+  *{box-sizing:border-box;}
+  input{outline:none;}
+  input::placeholder{color:rgba(255,255,255,.3);}
+</style>
+</helmet>
+<div style="min-height:100vh;background:#0a0b0d;color:#fff;font-family:'Archivo',system-ui,sans-serif;padding:26px 26px 40px;">
+<div style="max-width:1180px;margin:0 auto;">
+
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:16px;">
+    <div>
+      <div style="font-family:'Azeret Mono',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:8px;">Live workout stream</div>
+      <div style="font-size:30px;font-weight:800;letter-spacing:-1px;text-transform:uppercase;">Overlay Control</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div title="Sync status — LOCAL relay, CLOUD fallback, or connecting" style="display:flex;align-items:center;gap:9px;padding:9px 15px;border-radius:10px;background:{{ syncBg }};border:1px solid {{ syncBorder }};">
+        <span style="width:8px;height:8px;border-radius:50%;background:{{ syncDot }};box-shadow:0 0 10px {{ syncDot }};animation:wkoPulse 1.6s ease-in-out infinite;"></span>
+        <span style="font-family:'Azeret Mono',monospace;font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:{{ syncColor }};">{{ syncLabel }}</span>
+      </div>
+      <button onClick="{{ onResetSession }}" style="font-family:'Azeret Mono',monospace;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:11px 16px;border-radius:10px;background:rgba(255,255,255,.05);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.12);cursor:pointer;">Reset</button>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:680px 1fr;gap:20px;align-items:start;">
+
+    <!-- LEFT: preview + timer -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+
+      <div style="background:#111317;border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:18px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <span style="font-family:'Azeret Mono',monospace;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.45);">Live preview</span>
+          <span style="font-family:'Azeret Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.28);">1920 × 1080</span>
+        </div>
+        <div style="width:644px;height:362px;position:relative;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.1);">
+          <div style="position:absolute;inset:0;background:linear-gradient(135deg,#33373e 0%,#1a1c21 55%,#0d0e11 100%);"></div>
+          <div style="position:absolute;inset:0;background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.02) 0 12px,transparent 12px 24px);"></div>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Azeret Mono',monospace;font-size:12px;letter-spacing:3px;color:rgba(255,255,255,.22);text-transform:uppercase;">your camera feed</div>
+          <div style="position:absolute;top:0;left:0;width:1920px;height:1080px;transform:scale(0.33542);transform-origin:top left;pointer-events:none;font-family:'Archivo',system-ui,sans-serif;color:#fff;">
+            <sc-if value="{{ ovModLabel }}" hint-placeholder-val="{{ true }}">
+            <div style="position:absolute;top:56px;left:56px;display:flex;align-items:center;gap:12px;padding:12px 18px;background:rgba(12,13,16,0.66);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.09);border-radius:14px;">
+              <span style="width:9px;height:9px;border-radius:50%;background:#ff5c38;box-shadow:0 0 12px #ff5c38;animation:wkoPulse 1.6s ease-in-out infinite;"></span>
+              <span style="font-family:'Azeret Mono',monospace;font-size:14px;font-weight:600;letter-spacing:2px;text-transform:uppercase;">{{ className }}</span>
+            </div>
+            </sc-if>
+
+            <sc-if value="{{ ovShowOverview }}" hint-placeholder-val="{{ true }}">
+            <div style="position:absolute;top:56px;right:56px;width:340px;padding:20px 22px 14px;background:rgba(12,13,16,0.66);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.09);border-radius:16px;">
+              <div style="font-family:'Azeret Mono',monospace;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:14px;">Session</div>
+              <sc-for list="{{ ovOverviewRows }}" as="row" hint-placeholder-count="4">
+                <div style="{{ row.rowStyle }}">
+                  <span style="{{ row.barStyle }}"></span>
+                  <div style="display:flex;flex-direction:column;gap:2px;min-width:0;">
+                    <span style="{{ row.tagStyle }}">{{ row.phase }}</span>
+                    <span style="{{ row.labelStyle }}">{{ row.label }}</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            </sc-if>
+
+            <div style="position:absolute;bottom:56px;left:56px;max-width:820px;">
+              <div style="display:flex;gap:10px;margin-bottom:20px;">
+                <sc-if value="{{ ovModPhase }}" hint-placeholder-val="{{ true }}">
+                <span style="display:inline-flex;align-items:center;padding:9px 16px;border-radius:10px;background:#ff5c38;color:#0b0c0e;font-family:'Azeret Mono',monospace;font-size:14px;font-weight:600;letter-spacing:2px;text-transform:uppercase;">{{ phase }}</span>
+                </sc-if>
+                <sc-if value="{{ ovModRound }}" hint-placeholder-val="{{ true }}">
+                <span style="display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:10px;background:rgba(12,13,16,0.66);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.09);font-family:'Azeret Mono',monospace;font-size:14px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;">
+                  <span style="color:rgba(255,255,255,.5);">Round</span>
+                  <span>{{ roundCurrent }}</span><span style="color:rgba(255,255,255,.35);">/</span><span style="color:rgba(255,255,255,.6);">{{ roundTotal }}</span>
+                </span>
+                </sc-if>
+              </div>
+              <sc-if value="{{ ovModExercise }}" hint-placeholder-val="{{ true }}">
+              <div style="font-size:84px;font-weight:800;line-height:0.95;letter-spacing:-2.5px;text-transform:uppercase;text-shadow:0 6px 30px rgba(0,0,0,.6);">{{ exercise }}</div>
+              <div style="margin-top:18px;display:flex;align-items:center;gap:12px;">
+                <span style="font-family:'Azeret Mono',monospace;font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.45);">Next</span>
+                <span style="width:22px;height:1px;background:rgba(255,255,255,.3);"></span>
+                <span style="font-family:'Azeret Mono',monospace;font-size:15px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.85);text-shadow:0 2px 14px rgba(0,0,0,.6);">{{ nextUp }}</span>
+              </div>
+              </sc-if>
+            </div>
+
+            <sc-if value="{{ ovModTimer }}" hint-placeholder-val="{{ true }}">
+            <div style="position:absolute;bottom:56px;right:56px;width:520px;padding:22px 28px 26px;background:rgba(12,13,16,0.66);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.09);border-radius:20px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+                <span style="font-family:'Azeret Mono',monospace;font-size:15px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:{{ modeColor }};">{{ modeLabel }}</span>
+                <span style="font-family:'Azeret Mono',monospace;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.45);">{{ ovRunLabel }}</span>
+              </div>
+              <div style="font-size:150px;font-weight:800;line-height:0.92;letter-spacing:-5px;font-variant-numeric:tabular-nums;text-align:right;color:{{ ovTimeColor }};animation:{{ ovTimeAnim }};">{{ timeDisplay }}</div>
+              <div style="margin-top:14px;height:8px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden;">
+                <div style="height:100%;border-radius:99px;background:{{ modeColor }};width:{{ ovProgressPct }};transition:width .25s linear;"></div>
+              </div>
+            </div>
+            </sc-if>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#111317;border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:22px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <span style="font-family:'Azeret Mono',monospace;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.45);">Interval timer</span>
+          <div style="display:flex;gap:8px;">
+            <button onClick="{{ onWorkToggle }}" style="{{ workSegStyle }}">Work</button>
+            <button onClick="{{ onRestToggle }}" style="{{ restSegStyle }}">Rest</button>
+          </div>
+        </div>
+
+        <div style="font-family:'Azeret Mono',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:12px;">{{ exercise }} · Round {{ roundCurrent }} / {{ roundTotal }}</div>
+
+        <div style="display:flex;align-items:baseline;gap:16px;margin-bottom:20px;">
+          <span style="font-size:88px;font-weight:800;line-height:1;letter-spacing:-3px;font-variant-numeric:tabular-nums;color:{{ modeColor }};">{{ timeDisplay }}</span>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <span style="font-family:'Azeret Mono',monospace;font-size:13px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:{{ modeColor }};">{{ modeLabel }}</span>
+            <span style="font-family:'Azeret Mono',monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.4);">{{ runStateLabel }}</span>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-bottom:18px;">
+          <button onClick="{{ onStartPause }}" style="flex:1;font-family:'Azeret Mono',monospace;font-size:14px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:15px;border-radius:12px;background:#ff5c38;color:#0b0c0e;border:none;cursor:pointer;">{{ startPauseLabel }}</button>
+          <button onClick="{{ onReset }}" style="font-family:'Azeret Mono',monospace;font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:15px 20px;border-radius:12px;background:rgba(255,255,255,.05);color:#fff;border:1px solid rgba(255,255,255,.12);cursor:pointer;">Reset</button>
+          <button onClick="{{ onSkip }}" style="font-family:'Azeret Mono',monospace;font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:15px 20px;border-radius:12px;background:rgba(255,255,255,.05);color:#fff;border:1px solid rgba(255,255,255,.12);cursor:pointer;">Skip ›</button>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-bottom:20px;">
+          <button onClick="{{ onMinus }}" style="flex:1;font-family:'Azeret Mono',monospace;font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:12px;border-radius:10px;background:rgba(255,255,255,.04);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.1);cursor:pointer;">− 15s</button>
+          <button onClick="{{ onPlus }}" style="flex:1;font-family:'Azeret Mono',monospace;font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:12px;border-radius:10px;background:rgba(255,255,255,.04);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.1);cursor:pointer;">+ 15s</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div style="background:#0a0b0d;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 14px;">
+            <div style="font-family:'Azeret Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#ff5c38;margin-bottom:10px;">Work length</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <button onClick="{{ onWorkMinus }}" style="width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.05);color:#fff;border:1px solid rgba(255,255,255,.12);cursor:pointer;font-size:18px;line-height:1;">−</button>
+              <span style="font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;">{{ workDurLabel }}</span>
+              <button onClick="{{ onWorkPlus }}" style="width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.05);color:#fff;border:1px solid rgba(255,255,255,.12);cursor:pointer;font-size:18px;line-height:1;">+</button>
+            </div>
+          </div>
+          <div style="background:#0a0b0d;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 14px;">
+            <div style="font-family:'Azeret Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#3ddc97;margin-bottom:10px;">Rest length</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <button onClick="{{ onRestMinus }}" style="width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.05);color:#fff;border:1px solid rgba(255,255,255,.12);cursor:pointer;font-size:18px;line-height:1;">−</button>
+              <span style="font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;">{{ restDurLabel }}</span>
+              <button onClick="{{ onRestPlus }}" style="width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.05);color:#fff;border:1px solid rgba(255,255,255,.12);cursor:pointer;font-size:18px;line-height:1;">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: workout (build/live) + broadcast -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+
+      <div style="background:#111317;border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:22px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <span style="font-family:'Azeret Mono',monospace;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.45);">Workout</span>
+          <div style="display:flex;gap:6px;padding:4px;background:#0a0b0d;border:1px solid rgba(255,255,255,.08);border-radius:11px;">
+            <button onClick="{{ onModeLive }}" style="{{ liveTabStyle }}">Live</button>
+            <button onClick="{{ onModeBuild }}" style="{{ buildTabStyle }}">Build</button>
+          </div>
+        </div>
+
+        <!-- LIVE -->
+        <sc-if value="{{ isLive }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#0a0b0d;border:1px solid rgba(255,92,56,0.3);border-radius:14px;padding:16px 18px;margin-bottom:16px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+              <span style="font-family:'Azeret Mono',monospace;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:5px 9px;border-radius:7px;background:#ff5c38;color:#0b0c0e;">{{ phase }}</span>
+              <span style="font-family:'Azeret Mono',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.5);">Round {{ roundCurrent }} / {{ roundTotal }}</span>
+            </div>
+            <div style="font-size:26px;font-weight:800;letter-spacing:-.5px;text-transform:uppercase;line-height:1.05;margin-bottom:8px;">{{ exercise }}</div>
+            <div style="font-family:'Azeret Mono',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.4);">Next — {{ nextUp }}</div>
+          </div>
+
+          <div style="display:flex;gap:10px;margin-bottom:14px;">
+            <button onClick="{{ onPrev }}" style="font-family:'Azeret Mono',monospace;font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:14px 18px;border-radius:12px;background:rgba(255,255,255,.05);color:#fff;border:1px solid rgba(255,255,255,.12);cursor:pointer;">‹ Prev</button>
+            <button onClick="{{ onNext }}" style="flex:1;font-family:'Azeret Mono',monospace;font-size:14px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:14px;border-radius:12px;background:#ff5c38;color:#0b0c0e;border:none;cursor:pointer;">Next block ›</button>
+          </div>
+
+          <button onClick="{{ onToggleAuto }}" style="{{ autoStyle }}">
+            <span style="width:34px;height:20px;border-radius:99px;flex:none;position:relative;background:{{ autoTrack }};transition:background .15s;"><span style="position:absolute;top:2px;left:{{ autoKnob }};width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s;"></span></span>
+            <span>Auto-advance to next block</span>
+          </button>
+
+          <div style="font-family:'Azeret Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.3);margin:16px 0 10px;">Tap a block to load it</div>
+          <sc-for list="{{ liveRows }}" as="row" hint-placeholder-count="5">
+            <button onClick="{{ row.jump }}" style="{{ row.style }}">
+              <span style="{{ row.tagStyle }}">{{ row.phase }}</span>
+              <span style="{{ row.nameStyle }}">{{ row.exercise }}</span>
+              <span style="{{ row.metaStyle }}">{{ row.meta }}</span>
+            </button>
+          </sc-for>
+        </sc-if>
+
+        <!-- BUILD -->
+        <sc-if value="{{ isBuild }}" hint-placeholder-val="{{ true }}">
+          <div style="font-family:'Azeret Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:12px;">Set up your class — changes apply to a block when you load it in Live</div>
+          <sc-for list="{{ buildRows }}" as="row" hint-placeholder-count="3">
+            <div style="background:#0a0b0d;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px;margin-bottom:10px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                <div style="display:flex;flex-direction:column;gap:3px;flex:none;">
+                  <button onClick="{{ row.moveUp }}" style="width:26px;height:18px;border-radius:6px;background:rgba(255,255,255,.05);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.1);cursor:pointer;font-size:10px;line-height:1;padding:0;">▲</button>
+                  <button onClick="{{ row.moveDown }}" style="width:26px;height:18px;border-radius:6px;background:rgba(255,255,255,.05);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.1);cursor:pointer;font-size:10px;line-height:1;padding:0;">▼</button>
+                </div>
+                <button onClick="{{ row.cyclePhase }}" style="{{ row.tagStyle }}">{{ row.phase }}</button>
+                <input value="{{ row.exercise }}" onInput="{{ row.onEx }}" placeholder="Exercise name" style="flex:1;min-width:0;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.12);color:#fff;font-family:'Archivo',sans-serif;font-size:15px;font-weight:600;padding:4px 2px;" />
+                <button onClick="{{ row.remove }}" style="width:28px;height:28px;flex:none;border-radius:7px;background:transparent;color:rgba(255,255,255,.35);border:none;cursor:pointer;font-size:16px;line-height:1;">×</button>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+                <div style="background:#111317;border:1px solid rgba(255,255,255,.07);border-radius:9px;padding:8px 9px;">
+                  <div style="font-family:'Azeret Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#ff5c38;margin-bottom:7px;">Work</div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:4px;">
+                    <button onClick="{{ row.workMinus }}" style="width:26px;height:26px;flex:none;border-radius:7px;background:rgba(255,255,255,.05);color:#fff;border:1px solid rgba(255,255,255,.12);cursor:pointer;font-size:14px;line-height:1;">−</button>
+                    <span style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;">{{ row.work }}</span>
+                    <button onClick="{{ row.workPlus }}" style="width:26px;height:26px;flex:none;border-radius:7px;background:rgba(255,255,255,.05);color:#fff;border:1px solid rgba(255,255,255,.12);cursor:pointer;font-size:14px;line-height:1;">+</button>
+                  </div>
+                </div>
+                <div style="background:#111317;border:1px solid rgba(255,255,255,.07);border-radius:9px;padding:8px 9px;">
+                  <div style="font-family:'Azeret Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#3ddc97;margin-bottom:7px;">Rest</div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:4px;">
+                    <button onClick="{{ row.restMinus }}" style="width:26px;height:26px;flex:none;border-radius:7px;background:rgba(255,255,255,.05);color:#fff;border:1px solid rgba(255,255,255,.12);cursor:pointer;font-size:14px;line-height:1;">−</button>
+                    <span style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;">{{ row.rest }}</span>
+                    <button onClick="{{ row.restPlus }}" style="width:26px;height:26px;flex:none;border-radius:7px;background:rgba(255,255,255,.05);color:#fff;border:1px solid rgba(255,255,255,.12);cursor:pointer;font-size:14px;line-height:1;">+</button>
+                  </div>
+                </div>
+                <div style="background:#111317;border:1px solid rgba(255,255,255,.07);border-radius:9px;padding:8px 9px;">
+                  <div style="font-family:'Azeret Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:7px;">Rounds</div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:4px;">
+                    <button onClick="{{ row.roundMinus }}" style="width:26px;height:26px;flex:none;border-radius:7px;background:rgba(255,255,255,.05);color:#fff;border:1px solid rgba(255,255,255,.12);cursor:pointer;font-size:14px;line-height:1;">−</button>
+                    <span style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;">{{ row.rounds }}</span>
+                    <button onClick="{{ row.roundPlus }}" style="width:26px;height:26px;flex:none;border-radius:7px;background:rgba(255,255,255,.05);color:#fff;border:1px solid rgba(255,255,255,.12);cursor:pointer;font-size:14px;line-height:1;">+</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+          <button onClick="{{ onPlanAdd }}" style="width:100%;font-family:'Azeret Mono',monospace;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:12px;border-radius:10px;background:rgba(255,255,255,.04);color:rgba(255,255,255,.65);border:1px dashed rgba(255,255,255,.18);cursor:pointer;">+ Add block</button>
+        </sc-if>
+      </div>
+
+      <div style="background:#111317;border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:22px;">
+        <div style="font-family:'Azeret Mono',monospace;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:14px;">Broadcast</div>
+        <div style="font-family:'Azeret Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.38);margin-bottom:8px;">Class label</div>
+        <input value="{{ classNameValue }}" onInput="{{ onLabelInput }}" placeholder="Instructor · Program" style="width:100%;background:#0a0b0d;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:12px 14px;color:#fff;font-family:'Azeret Mono',monospace;font-size:14px;letter-spacing:1px;margin-bottom:20px;" />
+        <div style="font-family:'Azeret Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.38);margin-bottom:8px;">On-screen modules</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <sc-for list="{{ moduleBtns }}" as="b" hint-placeholder-count="6">
+            <button onClick="{{ b.onClick }}" style="{{ b.style }}">{{ b.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="margin-top:26px;font-family:'Azeret Mono',monospace;font-size:11px;letter-spacing:1px;line-height:1.7;color:rgba(255,255,255,.32);">
+    OBS — add <span style="color:rgba(255,255,255,.6);">Overlay.html</span> as a 1920 × 1080 Browser Source (transparent). Sync channel <span style="color:rgba(255,255,255,.6);">{{ syncTopicText }}</span>. Run <span style="color:rgba(255,255,255,.6);">relay.js</span> for instant, offline LOCAL sync — see README.txt.
+  </div>
+
+</div>
+</div>
+
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100" height="100" rx="22" fill="#0a0b0d"/>
+  <circle cx="50" cy="55" r="19" fill="none" stroke="#ff5c38" stroke-width="5"/>
+  <rect x="42" y="21" width="16" height="7" rx="3" fill="#ff5c38"/>
+  <line x1="50" y1="55" x2="50" y2="42" stroke="#ff5c38" stroke-width="5" stroke-linecap="round"/>
+</svg>
+</template>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { mode: 'live', drafts: {} };
+  _deb = {};
+
+  componentDidMount() {
+    const init = () => {
+      if (!window.WorkoutStore) { this._wait = setTimeout(init, 20); return; }
+      this.store = window.WorkoutStore;
+      this.PHASES = this.store.PHASES;
+      this.unsub = this.store.subscribe(() => this.forceUpdate());
+      this.loop = setInterval(() => this.tick(), 200);
+      this.forceUpdate();
+    };
+    init();
+  }
+  componentWillUnmount() {
+    if (this.unsub) this.unsub();
+    clearInterval(this.loop);
+    clearTimeout(this._wait);
+    Object.values(this._deb).forEach(clearTimeout);
+  }
+
+  remainingSec() {
+    const t = this.store.get().timer;
+    return t.running ? Math.max(0, (t.endsAt - Date.now()) / 1000) : Math.max(0, t.remaining);
+  }
+  fmt(s) {
+    s = Math.ceil(s);
+    const m = Math.floor(s / 60);
+    const ss = String(s % 60).padStart(2, '0');
+    return m > 0 ? m + ':' + ss : '0:' + ss;
+  }
+
+  // ---------- timer engine (control owns advancement) ----------
+  tick() {
+    const t = this.store.get().timer;
+    // Only auto-advance when no OBS overlay is present to own the clock.
+    if (this.store.isAdvancer() && t.running && (t.endsAt - Date.now()) <= 0) this.advance();
+    if (t.running) this.forceUpdate();
+  }
+  advance() {
+    const t = this.store.get().timer;
+    if (t.mode === 'WORK' && t.restDur > 0) {
+      this.store.set({ timer: { mode: 'REST', duration: t.restDur, remaining: t.restDur, endsAt: Date.now() + t.restDur * 1000, running: true } });
+    } else {
+      this.endRound();
+    }
+  }
+  endRound() {
+    const s = this.store.get();
+    const t = s.timer;
+    if (s.round.current < s.round.total) {
+      this.store.set({ round: { current: s.round.current + 1 }, timer: { mode: 'WORK', duration: t.workDur, remaining: t.workDur, endsAt: Date.now() + t.workDur * 1000, running: true } });
+    } else if (s.autoAdvance && s.stepIndex < s.plan.length - 1) {
+      this.loadStep(s.stepIndex + 1, true);
+    } else {
+      this.store.set({ timer: { running: false, endsAt: 0 } });
+    }
+  }
+
+  // ---------- plan navigation ----------
+  loadStep(i, start) {
+    const s = this.store.get();
+    const plan = s.plan;
+    if (i < 0 || i >= plan.length) return;
+    const st = plan[i];
+    const next = plan[i + 1] ? plan[i + 1].exercise : 'Finish';
+    const rem = st.work;
+    this.store.set({
+      stepIndex: i,
+      phase: st.phase,
+      exercise: st.exercise,
+      nextUp: next,
+      round: { current: 1, total: Math.max(1, st.rounds || 1) },
+      timer: { mode: 'WORK', workDur: st.work, restDur: st.rest, duration: st.work, remaining: rem, running: !!start, endsAt: start ? Date.now() + rem * 1000 : 0 },
+    });
+  }
+  nextStep() { this.loadStep(this.store.get().stepIndex + 1, true); }
+  prevStep() { this.loadStep(this.store.get().stepIndex - 1, true); }
+
+  // ---------- plan editing (build) ----------
+  planNum(i, key, delta) {
+    const plan = this.store.get().plan.slice();
+    let v = (plan[i][key] || 0) + delta;
+    if (key === 'work') v = Math.max(5, v);
+    else if (key === 'rest') v = Math.max(0, v);
+    else if (key === 'rounds') v = Math.max(1, v);
+    plan[i] = { ...plan[i], [key]: v };
+    this.store.set({ plan });
+  }
+  planPhase(i) {
+    const plan = this.store.get().plan.slice();
+    const idx = (this.PHASES.indexOf(plan[i].phase) + 1) % this.PHASES.length;
+    plan[i] = { ...plan[i], phase: this.PHASES[idx] };
+    this.store.set({ plan });
+  }
+  planMove(i, dir) {
+    const s = this.store.get();
+    const plan = s.plan.slice();
+    const j = i + dir;
+    if (j < 0 || j >= plan.length) return;
+    const tmp = plan[i]; plan[i] = plan[j]; plan[j] = tmp;
+    let si = s.stepIndex;
+    if (si === i) si = j; else if (si === j) si = i;
+    this.store.set({ plan, stepIndex: si });
+  }
+  planRemove(i) {
+    const s = this.store.get();
+    const plan = s.plan.slice();
+    plan.splice(i, 1);
+    let si = s.stepIndex;
+    if (i < si) si--;
+    si = Math.max(0, Math.min(si, plan.length - 1));
+    this.store.set({ plan, stepIndex: si });
+  }
+  planAdd() {
+    const plan = this.store.get().plan.slice();
+    plan.push({ phase: 'FLOW', exercise: 'New exercise', work: 45, rest: 15, rounds: 3 });
+    this.store.set({ plan });
+  }
+
+  // ---------- debounced text (avoids a publish per keystroke) ----------
+  commitDraft(key, value) {
+    clearTimeout(this._deb[key]);
+    this.setState(st => ({ drafts: { ...st.drafts, [key]: value } }));
+    this._deb[key] = setTimeout(() => {
+      if (key === 'className') this.store.set({ className: value });
+      else if (key.indexOf('ex:') === 0) {
+        const i = parseInt(key.slice(3), 10);
+        const plan = this.store.get().plan.slice();
+        if (plan[i]) { plan[i] = { ...plan[i], exercise: value }; this.store.set({ plan }); }
+      }
+      this.setState(st => { const d = { ...st.drafts }; delete d[key]; return { drafts: d }; });
+    }, 250);
+  }
+
+  // ---------- timer transport ----------
+  startPause() {
+    const t = this.store.get().timer;
+    if (t.running) {
+      this.store.set({ timer: { running: false, remaining: Math.max(0, (t.endsAt - Date.now()) / 1000), endsAt: 0 } });
+    } else {
+      const rem = t.remaining > 0 ? t.remaining : t.duration;
+      this.store.set({ timer: { running: true, remaining: rem, endsAt: Date.now() + rem * 1000 } });
+    }
+  }
+  resetTimer() {
+    const t = this.store.get().timer;
+    const dur = t.mode === 'WORK' ? t.workDur : t.restDur;
+    this.store.set({ timer: { running: false, duration: dur, remaining: dur, endsAt: 0 } });
+  }
+  adjust(delta) {
+    const t = this.store.get().timer;
+    let rem = Math.max(0, this.remainingSec() + delta);
+    this.store.set({ timer: { remaining: rem, duration: Math.max(t.duration, rem), endsAt: t.running ? Date.now() + rem * 1000 : 0 } });
+  }
+  setTimerMode(mode) {
+    const t = this.store.get().timer;
+    const dur = mode === 'WORK' ? t.workDur : t.restDur;
+    this.store.set({ timer: { mode, duration: dur, remaining: dur, running: false, endsAt: 0 } });
+  }
+  changeDur(kind, delta) {
+    const t = this.store.get().timer;
+    const key = kind === 'WORK' ? 'workDur' : 'restDur';
+    const val = Math.max(kind === 'REST' ? 0 : 5, t[key] + delta);
+    const patch = { timer: {} };
+    patch.timer[key] = val;
+    if (t.mode === kind && !t.running) { patch.timer.duration = val; patch.timer.remaining = val; }
+    this.store.set(patch);
+  }
+
+  renderVals() {
+    if (!this.store && window.WorkoutStore) { this.store = window.WorkoutStore; this.PHASES = window.WorkoutStore.PHASES; }
+    if (!this.store) return {};
+    const s = this.store.get();
+    const t = s.timer;
+    const m = s.modules || {};
+    const drafts = this.state.drafts || {};
+    const rem = this.remainingSec();
+    const modeColor = t.mode === 'WORK' ? '#ff5c38' : '#3ddc97';
+    const warn = t.running && rem <= 5.0001;
+    const isLive = this.state.mode === 'live';
+
+    // sync chip
+    const syncMap = {
+      local: { label: 'Local', color: '#3ddc97', bg: 'rgba(61,220,151,0.12)', border: 'rgba(61,220,151,0.35)' },
+      cloud: { label: 'Cloud', color: '#ffb347', bg: 'rgba(255,179,71,0.12)', border: 'rgba(255,179,71,0.35)' },
+      off: { label: 'Sync\u2026', color: 'rgba(255,255,255,.55)', bg: 'rgba(255,255,255,.05)', border: 'rgba(255,255,255,.12)' },
+    };
+    const sy = syncMap[this.store.netMode] || syncMap.off;
+
+    // segmented / tab helpers
+    const tabBase = "font-family:'Azeret Mono',monospace;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:8px 16px;border-radius:8px;cursor:pointer;border:none;";
+    const tabOn = 'background:#ff5c38;color:#0b0c0e;';
+    const tabOff = 'background:transparent;color:rgba(255,255,255,.5);';
+    const segOn = "font-family:'Azeret Mono',monospace;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:9px 14px;border-radius:9px;border:1px solid;cursor:pointer;";
+    const workSegStyle = segOn + (t.mode === 'WORK' ? 'background:rgba(255,92,56,0.15);color:#ff5c38;border-color:rgba(255,92,56,.4);' : 'background:rgba(255,255,255,.04);color:rgba(255,255,255,.5);border-color:rgba(255,255,255,.1);');
+    const restSegStyle = segOn + (t.mode === 'REST' ? 'background:rgba(61,220,151,0.15);color:#3ddc97;border-color:rgba(61,220,151,.4);' : 'background:rgba(255,255,255,.04);color:rgba(255,255,255,.5);border-color:rgba(255,255,255,.1);');
+
+    // module toggles
+    const modMeta = [['label', 'Label'], ['phase', 'Phase'], ['round', 'Round'], ['exercise', 'Exercise'], ['timer', 'Timer'], ['overview', 'Plan']];
+    const moduleBtns = modMeta.map(([key, label]) => {
+      const on = m[key] !== false;
+      const style = "font-family:'Azeret Mono',monospace;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:10px 14px;border-radius:9px;cursor:pointer;border:1px solid;" + (on ? 'background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.2);' : 'background:transparent;color:rgba(255,255,255,.32);border-color:rgba(255,255,255,.08);');
+      return { key, label, style, onClick: () => this.store.set({ modules: { [key]: !on } }) };
+    });
+
+    const plan = s.plan || [];
+    const stepIndex = s.stepIndex || 0;
+
+    // overlay-mirror session list
+    const ovOverviewRows = plan.map((it, i) => {
+      const stt = i < stepIndex ? 'done' : (i === stepIndex ? 'current' : 'upcoming');
+      const bar = stt === 'current' ? '#ff5c38' : (stt === 'done' ? 'rgba(255,255,255,.28)' : 'rgba(255,255,255,.14)');
+      const rowStyle = 'display:flex;gap:12px;align-items:stretch;padding:9px 11px;border-radius:10px;margin-bottom:5px;' + (stt === 'current' ? 'background:rgba(255,92,56,0.13);' : '');
+      const barStyle = 'width:3px;border-radius:2px;flex:none;background:' + bar + ';';
+      const tagStyle = "font-family:'Azeret Mono',monospace;font-size:10px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;color:" + (stt === 'current' ? '#ff5c38' : 'rgba(255,255,255,.42)') + ';';
+      const labelStyle = 'font-size:15px;font-weight:600;line-height:1.15;color:' + (stt === 'current' ? '#fff' : (stt === 'done' ? 'rgba(255,255,255,.4)' : 'rgba(255,255,255,.72)')) + ';' + (stt === 'done' ? 'text-decoration:line-through;' : '');
+      return { phase: it.phase, label: it.exercise, rowStyle, barStyle, tagStyle, labelStyle };
+    });
+
+    // live run list (tap to load)
+    const liveRows = plan.map((st, i) => {
+      const cur = i === stepIndex;
+      const style = 'display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 12px;border-radius:10px;margin-bottom:6px;cursor:pointer;border:1px solid;' + (cur ? 'background:rgba(255,92,56,0.13);border-color:rgba(255,92,56,.4);' : 'background:#0a0b0d;border-color:rgba(255,255,255,.07);');
+      const tagStyle = "font-family:'Azeret Mono',monospace;font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;padding:4px 8px;border-radius:6px;flex:none;background:rgba(255,255,255,.06);color:" + (cur ? '#ff5c38' : 'rgba(255,255,255,.5)') + ';';
+      const nameStyle = 'flex:1;min-width:0;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:' + (cur ? '#fff' : 'rgba(255,255,255,.8)') + ';';
+      const metaStyle = "font-family:'Azeret Mono',monospace;font-size:11px;letter-spacing:.5px;flex:none;color:rgba(255,255,255,.4);";
+      const meta = st.work + 's' + (st.rest ? (' / ' + st.rest + 's') : '') + ' · ' + (st.rounds || 1) + '\u00d7';
+      return { phase: st.phase, exercise: st.exercise, meta, style, tagStyle, nameStyle, metaStyle, jump: () => this.loadStep(i, false) };
+    });
+
+    // build rows (editable, draft-aware exercise)
+    const buildRows = plan.map((st, i) => {
+      const exKey = 'ex:' + i;
+      const exVal = drafts[exKey] != null ? drafts[exKey] : st.exercise;
+      return {
+        phase: st.phase, exercise: exVal, work: st.work + 's', rest: st.rest + 's', rounds: (st.rounds || 1),
+        onEx: (e) => this.commitDraft(exKey, e.target.value),
+        cyclePhase: () => this.planPhase(i),
+        workMinus: () => this.planNum(i, 'work', -5), workPlus: () => this.planNum(i, 'work', 5),
+        restMinus: () => this.planNum(i, 'rest', -5), restPlus: () => this.planNum(i, 'rest', 5),
+        roundMinus: () => this.planNum(i, 'rounds', -1), roundPlus: () => this.planNum(i, 'rounds', 1),
+        moveUp: () => this.planMove(i, -1), moveDown: () => this.planMove(i, 1),
+        remove: () => this.planRemove(i),
+        tagStyle: "font-family:'Azeret Mono',monospace;font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;padding:6px 9px;border-radius:7px;cursor:pointer;border:none;flex:none;background:rgba(255,92,56,0.14);color:#ff5c38;",
+      };
+    });
+
+    const autoOn = !!s.autoAdvance;
+
+    return {
+      // sync chip
+      syncLabel: sy.label, syncColor: sy.color, syncDot: sy.color, syncBg: sy.bg, syncBorder: sy.border,
+      syncTopicText: this.store.topic,
+
+      // mode tabs
+      isLive, isBuild: !isLive,
+      liveTabStyle: tabBase + (isLive ? tabOn : tabOff),
+      buildTabStyle: tabBase + (!isLive ? tabOn : tabOff),
+      onModeLive: () => this.setState({ mode: 'live' }),
+      onModeBuild: () => this.setState({ mode: 'build' }),
+
+      // live nav
+      onPrev: () => this.prevStep(),
+      onNext: () => this.nextStep(),
+      onToggleAuto: () => this.store.set({ autoAdvance: !autoOn }),
+      autoStyle: "display:flex;align-items:center;gap:12px;width:100%;text-align:left;font-family:'Azeret Mono',monospace;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:12px 14px;border-radius:11px;cursor:pointer;border:1px solid " + (autoOn ? 'rgba(255,92,56,.35)' : 'rgba(255,255,255,.1)') + ';background:' + (autoOn ? 'rgba(255,92,56,0.1)' : 'rgba(255,255,255,.03)') + ';color:' + (autoOn ? '#fff' : 'rgba(255,255,255,.6)') + ';',
+      autoTrack: autoOn ? '#ff5c38' : 'rgba(255,255,255,.18)',
+      autoKnob: autoOn ? '16px' : '2px',
+      liveRows,
+      buildRows,
+      onPlanAdd: () => this.planAdd(),
+
+      // timer
+      timeDisplay: this.fmt(rem),
+      modeColor, modeLabel: t.mode,
+      runStateLabel: t.running ? 'Running' : 'Paused',
+      startPauseLabel: t.running ? 'Pause' : 'Start',
+      workDurLabel: t.workDur + 's',
+      restDurLabel: t.restDur + 's',
+      workSegStyle, restSegStyle,
+      onStartPause: () => this.startPause(),
+      onReset: () => this.resetTimer(),
+      onSkip: () => this.advance(),
+      onMinus: () => this.adjust(-15),
+      onPlus: () => this.adjust(15),
+      onWorkToggle: () => this.setTimerMode('WORK'),
+      onRestToggle: () => this.setTimerMode('REST'),
+      onWorkMinus: () => this.changeDur('WORK', -5),
+      onWorkPlus: () => this.changeDur('WORK', 5),
+      onRestMinus: () => this.changeDur('REST', -5),
+      onRestPlus: () => this.changeDur('REST', 5),
+
+      // broadcast
+      classNameValue: drafts['className'] != null ? drafts['className'] : s.className,
+      onLabelInput: (e) => this.commitDraft('className', e.target.value),
+      moduleBtns,
+      onResetSession: () => this.store.reset(),
+
+      // live hero + shared display + overlay mirror
+      phase: s.phase,
+      exercise: s.exercise,
+      nextUp: s.nextUp,
+      className: s.className,
+      roundCurrent: s.round.current,
+      roundTotal: s.round.total,
+      ovModLabel: m.label !== false,
+      ovModPhase: m.phase !== false,
+      ovModRound: m.round !== false,
+      ovModExercise: m.exercise !== false,
+      ovModTimer: m.timer !== false,
+      ovShowOverview: !!s.showOverview && m.overview !== false,
+      ovOverviewRows,
+      ovProgressPct: ((t.duration > 0 ? Math.max(0, Math.min(1, rem / t.duration)) : 0) * 100).toFixed(1) + '%',
+      ovTimeColor: warn ? '#ff5c38' : '#fff',
+      ovTimeAnim: warn ? 'wkoBlink .9s ease-in-out infinite' : 'none',
+      ovRunLabel: t.running ? '' : 'Paused',
+    };
+  }
+}
+</script>
+</body>
+</html>

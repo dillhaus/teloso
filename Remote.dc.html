@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Azeret+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script>window.WORKOUT_ROLE = 'remote';</script>
+<script src="store.js"></script>
+<style>
+  @keyframes wkoPulse { 0%,100%{opacity:1} 50%{opacity:.2} }
+  @keyframes wkoBlink { 0%,100%{opacity:1} 50%{opacity:.5} }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;background:#0a0b0d;}
+  button{font-family:inherit;}
+</style>
+</helmet>
+<div style="min-height:100vh;background:#0a0b0d;color:#fff;font-family:'Archivo',system-ui,sans-serif;max-width:520px;margin:0 auto;padding:16px 16px 28px;">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <div style="font-family:'Azeret Mono',monospace;font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.7);">{{ className }}</div>
+    <div style="display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:9px;background:{{ syncBg }};border:1px solid {{ syncBorder }};">
+      <span style="width:7px;height:7px;border-radius:50%;background:{{ syncDot }};animation:wkoPulse 1.6s ease-in-out infinite;"></span>
+      <span style="font-family:'Azeret Mono',monospace;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:{{ syncColor }};">{{ syncLabel }}</span>
+    </div>
+  </div>
+
+  <!-- current block -->
+  <div style="background:#111317;border:1px solid rgba(255,92,56,0.3);border-radius:18px;padding:20px;margin-bottom:14px;">
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:12px;">
+      <span style="font-family:'Azeret Mono',monospace;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:6px 11px;border-radius:8px;background:#ff5c38;color:#0b0c0e;">{{ phase }}</span>
+      <span style="font-family:'Azeret Mono',monospace;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.5);">Round {{ roundCurrent }} / {{ roundTotal }}</span>
+    </div>
+    <div style="font-size:30px;font-weight:800;letter-spacing:-.5px;text-transform:uppercase;line-height:1.02;margin-bottom:14px;">{{ exercise }}</div>
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;">
+      <span style="font-size:72px;font-weight:800;line-height:.9;letter-spacing:-3px;font-variant-numeric:tabular-nums;color:{{ timeColor }};animation:{{ timeAnim }};">{{ timeDisplay }}</span>
+      <span style="font-family:'Azeret Mono',monospace;font-size:14px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:{{ modeColor }};">{{ modeLabel }}</span>
+    </div>
+    <div style="height:8px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden;margin-bottom:14px;">
+      <div style="height:100%;border-radius:99px;background:{{ modeColor }};width:{{ progressPct }};transition:width .25s linear;"></div>
+    </div>
+    <div style="font-family:'Azeret Mono',monospace;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.45);">Next — {{ nextUp }}</div>
+  </div>
+
+  <!-- transport -->
+  <button onClick="{{ onStartPause }}" style="width:100%;height:66px;margin-bottom:10px;font-family:'Azeret Mono',monospace;font-size:18px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;border-radius:15px;background:#ff5c38;color:#0b0c0e;border:none;cursor:pointer;">{{ startPauseLabel }}</button>
+
+  <div style="display:flex;gap:10px;margin-bottom:10px;">
+    <button onClick="{{ onMinus }}" style="flex:1;height:54px;font-family:'Azeret Mono',monospace;font-size:15px;font-weight:600;letter-spacing:1px;text-transform:uppercase;border-radius:13px;background:rgba(255,255,255,.05);color:#fff;border:1px solid rgba(255,255,255,.12);cursor:pointer;">− 15s</button>
+    <button onClick="{{ onSkip }}" style="flex:1;height:54px;font-family:'Azeret Mono',monospace;font-size:15px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;border-radius:13px;background:rgba(255,255,255,.05);color:#fff;border:1px solid rgba(255,255,255,.12);cursor:pointer;">Skip ›</button>
+    <button onClick="{{ onPlus }}" style="flex:1;height:54px;font-family:'Azeret Mono',monospace;font-size:15px;font-weight:600;letter-spacing:1px;text-transform:uppercase;border-radius:13px;background:rgba(255,255,255,.05);color:#fff;border:1px solid rgba(255,255,255,.12);cursor:pointer;">+ 15s</button>
+  </div>
+
+  <div style="display:flex;gap:10px;margin-bottom:14px;">
+    <button onClick="{{ onPrev }}" style="height:60px;padding:0 22px;font-family:'Azeret Mono',monospace;font-size:15px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;border-radius:14px;background:rgba(255,255,255,.05);color:#fff;border:1px solid rgba(255,255,255,.12);cursor:pointer;">‹ Prev</button>
+    <button onClick="{{ onNext }}" style="flex:1;height:60px;font-family:'Azeret Mono',monospace;font-size:16px;font-weight:600;letter-spacing:2px;text-transform:uppercase;border-radius:14px;background:#ff5c38;color:#0b0c0e;border:none;cursor:pointer;">Next block ›</button>
+  </div>
+
+  <button onClick="{{ onToggleAuto }}" style="{{ autoStyle }}">
+    <span style="width:38px;height:22px;border-radius:99px;flex:none;position:relative;background:{{ autoTrack }};transition:background .15s;"><span style="position:absolute;top:2px;left:{{ autoKnob }};width:18px;height:18px;border-radius:50%;background:#fff;transition:left .15s;"></span></span>
+    <span>Auto-advance to next block</span>
+  </button>
+
+  <div style="font-family:'Azeret Mono',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.3);margin:20px 0 10px;">Tap a block to load it</div>
+  <sc-for list="{{ liveRows }}" as="row" hint-placeholder-count="5">
+    <button onClick="{{ row.jump }}" style="{{ row.style }}">
+      <span style="{{ row.tagStyle }}">{{ row.phase }}</span>
+      <span style="{{ row.nameStyle }}">{{ row.exercise }}</span>
+      <span style="{{ row.metaStyle }}">{{ row.meta }}</span>
+    </button>
+  </sc-for>
+
+</div>
+
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100" height="100" rx="22" fill="#0a0b0d"/>
+  <rect x="34" y="20" width="32" height="60" rx="8" fill="none" stroke="#ff5c38" stroke-width="5"/>
+  <circle cx="50" cy="68" r="4" fill="#ff5c38"/>
+</svg>
+</template>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:460,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  componentDidMount() {
+    const init = () => {
+      if (!window.WorkoutStore) { this._wait = setTimeout(init, 20); return; }
+      this.store = window.WorkoutStore;
+      this.unsub = this.store.subscribe(() => this.forceUpdate());
+      this.loop = setInterval(() => { if (this.store.get().timer.running) this.forceUpdate(); }, 250);
+      this.forceUpdate();
+    };
+    init();
+  }
+  componentWillUnmount() {
+    if (this.unsub) this.unsub();
+    clearInterval(this.loop);
+    clearTimeout(this._wait);
+  }
+
+  fmt(s) {
+    s = Math.ceil(s);
+    const m = Math.floor(s / 60);
+    const ss = String(s % 60).padStart(2, '0');
+    return m > 0 ? m + ':' + ss : '0:' + ss;
+  }
+
+  renderVals() {
+    if (!this.store && window.WorkoutStore) this.store = window.WorkoutStore;
+    if (!this.store) return {};
+    const s = this.store.get();
+    const t = s.timer;
+    const rem = this.store.remaining();
+    const modeColor = t.mode === 'WORK' ? '#ff5c38' : '#3ddc97';
+    const warn = t.running && rem <= 5.0001;
+
+    const syncMap = {
+      local: { label: 'Local', color: '#3ddc97', bg: 'rgba(61,220,151,0.12)', border: 'rgba(61,220,151,0.35)' },
+      cloud: { label: 'Cloud', color: '#ffb347', bg: 'rgba(255,179,71,0.12)', border: 'rgba(255,179,71,0.35)' },
+      off: { label: 'Sync\u2026', color: 'rgba(255,255,255,.55)', bg: 'rgba(255,255,255,.05)', border: 'rgba(255,255,255,.12)' },
+    };
+    const sy = syncMap[this.store.netMode] || syncMap.off;
+
+    const stepIndex = s.stepIndex || 0;
+    const liveRows = (s.plan || []).map((st, i) => {
+      const cur = i === stepIndex;
+      const style = 'display:flex;align-items:center;gap:10px;width:100%;text-align:left;min-height:56px;padding:10px 14px;border-radius:13px;margin-bottom:8px;cursor:pointer;border:1px solid;' + (cur ? 'background:rgba(255,92,56,0.13);border-color:rgba(255,92,56,.4);' : 'background:#111317;border-color:rgba(255,255,255,.08);');
+      const tagStyle = "font-family:'Azeret Mono',monospace;font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;padding:5px 9px;border-radius:7px;flex:none;background:rgba(255,255,255,.06);color:" + (cur ? '#ff5c38' : 'rgba(255,255,255,.5)') + ';';
+      const nameStyle = 'flex:1;min-width:0;font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:' + (cur ? '#fff' : 'rgba(255,255,255,.82)') + ';';
+      const metaStyle = "font-family:'Azeret Mono',monospace;font-size:11px;letter-spacing:.5px;flex:none;color:rgba(255,255,255,.4);";
+      const meta = st.work + 's' + (st.rest ? (' / ' + st.rest + 's') : '') + ' · ' + (st.rounds || 1) + '\u00d7';
+      return { phase: st.phase, exercise: st.exercise, meta, style, tagStyle, nameStyle, metaStyle, jump: () => this.store.loadStep(i, false) };
+    });
+
+    const autoOn = !!s.autoAdvance;
+
+    return {
+      className: s.className,
+      phase: s.phase,
+      exercise: s.exercise,
+      nextUp: s.nextUp,
+      roundCurrent: s.round.current,
+      roundTotal: s.round.total,
+      timeDisplay: this.fmt(rem),
+      modeColor, modeLabel: t.mode,
+      timeColor: warn ? '#ff5c38' : '#fff',
+      timeAnim: warn ? 'wkoBlink .9s ease-in-out infinite' : 'none',
+      progressPct: ((t.duration > 0 ? Math.max(0, Math.min(1, rem / t.duration)) : 0) * 100).toFixed(1) + '%',
+      startPauseLabel: t.running ? 'Pause' : 'Start',
+
+      syncLabel: sy.label, syncColor: sy.color, syncDot: sy.color, syncBg: sy.bg, syncBorder: sy.border,
+
+      onStartPause: () => this.store.startPause(),
+      onSkip: () => this.store.skip(),
+      onMinus: () => this.store.adjust(-15),
+      onPlus: () => this.store.adjust(15),
+      onPrev: () => this.store.prevStep(),
+      onNext: () => this.store.nextStep(),
+      onToggleAuto: () => this.store.set({ autoAdvance: !autoOn }),
+      autoStyle: "display:flex;align-items:center;gap:12px;width:100%;text-align:left;min-height:56px;font-family:'Azeret Mono',monospace;font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:12px 16px;border-radius:14px;cursor:pointer;border:1px solid " + (autoOn ? 'rgba(255,92,56,.35)' : 'rgba(255,255,255,.1)') + ';background:' + (autoOn ? 'rgba(255,92,56,0.1)' : 'rgba(255,255,255,.03)') + ';color:' + (autoOn ? '#fff' : 'rgba(255,255,255,.6)') + ';',
+      autoTrack: autoOn ? '#ff5c38' : 'rgba(255,255,255,.18)',
+      autoKnob: autoOn ? '18px' : '2px',
+      liveRows,
+    };
+  }
+}
+</script>
+</body>
+</html>
