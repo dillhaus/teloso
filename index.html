@@ -257,13 +257,33 @@ class Component extends DCLogic {
     if (!v) return;
     clearInterval(this._vid);
     v.muted = true; v.loop = true; v.playsInline = true;
-    v.play().catch(() => {});
+    // Don't autostart — hold on the first frame (the deadbug) so a viewer
+    // who scrolls down later always catches it from the first movement.
+    v.autoplay = false;
+    try { v.pause(); v.currentTime = 0; } catch (e) {}
     v.addEventListener('ended', () => { v.currentTime = 0; v.play().catch(() => {}); });
+
+    let playing = false;
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting && !playing) {
+          playing = true;
+          try { v.currentTime = 0; } catch (err) {}
+          v.play().catch(() => {});
+        } else if (!e.isIntersecting && playing) {
+          playing = false;
+          try { v.pause(); v.currentTime = 0; } catch (err) {}
+        }
+      });
+    }, { threshold: 0.4 });
+    io.observe(v);
+    this._io = io;
   }
   componentWillUnmount() {
     clearInterval(this._boot);
     clearInterval(this._loop);
     clearInterval(this._vid);
+    if (this._io) this._io.disconnect();
   }
   overlayStore() {
     const f = [...document.querySelectorAll('iframe')].find(x => (x.getAttribute('src') || '').includes('Overlay'));
@@ -273,10 +293,10 @@ class Component extends DCLogic {
     const s = this.overlayStore();
     if (!s) return;
     clearInterval(this._boot);
-    const st = s.get();
-    // enable walk-through and start the current block running, so the demo is alive on arrival
+    // enable walk-through and always start from the FIRST block, so a refresh
+    // resets the demo to the top instead of resuming wherever it was left.
     s.set({ autoAdvance: true });
-    if (!st.timer.running) s.loadStep(st.stepIndex || 1, true);
+    s.loadStep(0, true);
     this._loop = setInterval(() => this.keepAlive(), 1500);
   }
   keepAlive() {
